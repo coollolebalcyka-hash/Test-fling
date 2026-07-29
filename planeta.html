@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Планета</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Планета">
+<meta name="theme-color" content="#0b1020">
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+:root{
+  --bg:#0b1020; --bg2:#141a2e; --card:#1b2440; --card2:#222d4f;
+  --line:#2a3560; --txt:#eef2ff; --muted:#93a0c8;
+  --accent:#7c5cff; --accent2:#22d3ee; --send:#6c5ce7; --danger:#ff5d6c; --ok:#34d399;
+}
+html,body{height:100%;}
+body{
+  font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--txt);
+  background:linear-gradient(160deg,#0b1020,#0e1428 55%,#0b1020);
+  overflow:hidden; user-select:none;
+}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;}
+.screen.active{display:flex;animation:fade .22s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Auth & Name ---------- */
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px;}
+.logo{width:104px;height:104px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%, #a78bfa, #6d28d9 55%, #3b0f8f);
+  box-shadow:0 0 0 6px rgba(124,92,255,.14), 0 18px 50px rgba(76,29,149,.55);
+  position:relative;margin-bottom:22px;overflow:hidden;}
+.logo:after{content:"";position:absolute;left:-14px;top:58%;width:150%;height:20px;
+  background:linear-gradient(90deg,transparent,rgba(34,211,238,.9),transparent);
+  transform:rotate(-18deg);border-radius:50%;filter:blur(.4px);opacity:.85;}
+.brand{font-size:30px;font-weight:800;letter-spacing:.5px;
+  background:linear-gradient(120deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.tagline{color:var(--muted);margin:8px 0 30px;font-size:14px;text-align:center;line-height:1.5;}
+.field{width:100%;max-width:360px;margin:9px 0;}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 6px 4px;}
+.input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--txt);
+  border-radius:14px;padding:15px 16px;font-size:16px;outline:none;transition:border .2s;}
+.input:focus{border-color:var(--accent);}
+.hint{font-size:12px;color:var(--muted);margin:8px 4px 0;line-height:1.5;}
+.hint b{color:#ffd479;}
+.btn{width:100%;max-width:360px;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;
+  color:#fff;background:linear-gradient(135deg,var(--accent),#5b8cff);margin-top:18px;cursor:pointer;
+  box-shadow:0 12px 30px rgba(91,140,255,.35);transition:transform .08s, opacity .2s;}
+.btn:active{transform:scale(.985);} .btn[disabled]{opacity:.45;box-shadow:none;}
+.btn.sec{background:transparent;border:1px solid var(--line);box-shadow:none;color:var(--muted);margin-top:10px;}
+
+/* ---------- Header ---------- */
+.hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:rgba(16,22,44,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);}
+.hdr .title{font-size:19px;font-weight:800;flex:1;
+  background:linear-gradient(120deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);
+  color:var(--txt);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.iconbtn:active{background:var(--card2);}
+
+/* ---------- Main / contacts ---------- */
+.profilebar{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(124,92,255,.10),transparent);}
+.profilebar .who{flex:1;min-width:0;}
+.profilebar .who .n{font-weight:700;font-size:15px;}
+.profilebar .who .p{color:var(--muted);font-size:12.5px;margin-top:2px;}
+.logout{color:var(--accent2);font-size:13px;background:none;border:none;cursor:pointer;font-weight:600;}
+.searchwrap{padding:12px 16px;position:relative;}
+.searchwrap input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:13px 14px 13px 42px;color:var(--txt);font-size:15px;outline:none;}
+.searchwrap input:focus{border-color:var(--accent);}
+.searchwrap .mag{position:absolute;left:30px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;}
+.list{flex:1;overflow-y:auto;padding:4px 8px 20px;}
+.sect{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;padding:12px 12px 6px;}
+.row{display:flex;align-items:center;gap:13px;padding:11px 12px;border-radius:14px;cursor:pointer;}
+.row:active{background:var(--card);}
+.avatar{width:50px;height:50px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:18px;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.35);}
+.row .meta{flex:1;min-width:0;}
+.row .meta .name{font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row .meta .sub{color:var(--muted);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 8px var(--ok);}
+.dot.off{background:#54608a;box-shadow:none;}
+.empty{color:var(--muted);text-align:center;padding:40px 20px;font-size:14px;line-height:1.6;}
+
+/* ---------- Chat ---------- */
+#screen-chat{background:linear-gradient(160deg,#0b1020,#101733);}
+.chat-hdr{display:flex;align-items:center;gap:11px;padding:10px 12px;background:rgba(16,22,44,.94);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(8px);}
+.chat-hdr .meta{flex:1;min-width:0;}
+.chat-hdr .meta .name{font-weight:700;font-size:15.5px;}
+.chat-hdr .meta .sub{color:var(--accent2);font-size:12px;margin-top:1px;}
+.msgs{flex:1;overflow-y:auto;padding:16px 12px 8px;display:flex;flex-direction:column;gap:8px;}
+.day{align-self:center;background:rgba(255,255,255,.06);color:var(--muted);font-size:11.5px;
+  padding:4px 12px;border-radius:20px;margin:4px 0;}
+.bubble{max-width:80%;padding:10px 13px;border-radius:18px;font-size:15px;line-height:1.4;position:relative;word-wrap:break-word;}
+.bubble .t{display:block;font-size:10.5px;color:rgba(255,255,255,.55);text-align:right;margin-top:3px;}
+.bubble.in{align-self:flex-start;background:var(--card);border-bottom-left-radius:6px;}
+.bubble.out{align-self:flex-end;background:linear-gradient(135deg,#6d5cff,#5b8cff);border-bottom-right-radius:6px;}
+.filemsg{display:flex;align-items:center;gap:11px;min-width:190px;}
+.fileic{width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.15);display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:800;letter-spacing:.5px;flex:none;}
+.filemsg .fi{min-width:0}
+.filemsg .fn{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.filemsg .fs{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;}
+.composer{display:flex;align-items:center;gap:9px;padding:10px 12px;background:rgba(16,22,44,.96);
+  border-top:1px solid var(--line);}
+.composer input{flex:1;background:var(--card);border:1px solid var(--line);border-radius:22px;
+  padding:12px 16px;color:var(--txt);font-size:15px;outline:none;}
+.composer input:focus{border-color:var(--accent);}
+.circle{width:44px;height:44px;border-radius:50%;border:none;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:19px;cursor:pointer;color:#fff;}
+.circle.attach{background:var(--card);border:1px solid var(--line);color:var(--muted);}
+.circle.send{background:linear-gradient(135deg,var(--accent),#5b8cff);box-shadow:0 8px 20px rgba(91,140,255,.4);}
+.circle:active{transform:scale(.94);}
+
+/* ---------- Camera ---------- */
+#screen-camera{background:#000;}
+#cam{flex:1;width:100%;object-fit:cover;background:#000;transform:scaleX(-1);}
+#cam.back{transform:none;}
+.cam-bar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;gap:26px;
+  padding:22px 0 30px;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);}
+.cam-top{position:absolute;top:0;left:0;right:0;padding:16px;display:flex;align-items:center;gap:10px;
+  background:linear-gradient(180deg,rgba(0,0,0,.6),transparent);}
+.cam-top .name{font-weight:700;}
+.camerr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:40px;color:var(--muted);font-size:15px;line-height:1.6;}
+.cbtn{width:60px;height:60px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.12);
+  color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.cbtn.red{background:var(--danger);border-color:#fff;}
+
+/* ---------- Overlay (call / screen share) ---------- */
+.overlay{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(700px 500px at 50% 20%, #24306a, #0a0f22 70%);z-index:50;padding:30px;text-align:center;}
+.overlay.active{display:flex;animation:fade .2s ease;}
+.overlay .bigav{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:44px;font-weight:800;color:#fff;margin-bottom:22px;box-shadow:0 0 0 8px rgba(255,255,255,.06);
+  animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 8px rgba(255,255,255,.06)}50%{box-shadow:0 0 0 18px rgba(255,255,255,.02)}}
+.overlay .cname{font-size:24px;font-weight:800;}
+.overlay .cstatus{color:var(--accent2);margin-top:8px;font-size:15px;}
+.overlay .note{color:var(--muted);font-size:13px;margin-top:16px;max-width:320px;line-height:1.6;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);padding:12px 14px;border-radius:14px;}
+.overlay .actions{display:flex;gap:24px;margin-top:40px;}
+.hang{width:64px;height:64px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:26px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 30px rgba(255,93,108,.5);}
+.oval{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;border:none;font-size:24px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.scrollbar-none::-webkit-scrollbar{width:0}
+
+/* iOS safe areas (notch) */
+@supports (padding: env(safe-area-inset-top)) {
+  .hdr { padding-top: calc(14px + env(safe-area-inset-top)); }
+  .chat-hdr { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .center { padding-top: calc(28px + env(safe-area-inset-top)); }
+  .composer { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .cam-bar { padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
+  .cam-top { padding-top: calc(16px + env(safe-area-inset-top)); }
+  .overlay { padding-top: calc(30px + env(safe-area-inset-top)); }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH ================= -->
+<section id="screen-auth" class="screen active">
+  <div class="center">
+    <div class="logo"></div>
+    <div class="brand">Планета</div>
+    <div class="tagline">Мессенджер, который держит вас на связи.<br>Зарегистрируйтесь или войдите.</div>
+    <div class="field">
+      <label>Номер телефона</label>
+      <input class="input" id="phone" type="tel" inputmode="tel" placeholder="+7 900 000-00-00" maxlength="18">
+      <div class="hint">Введите номер телефона. <b>SMS-код не придёт</b> — подтверждение по SMS не требуется.</div>
+    </div>
+    <button class="btn" id="authNext">Продолжить</button>
+  </div>
+</section>
+
+<!-- ================= NAME ================= -->
+<section id="screen-name" class="screen">
+  <div class="center">
+    <div class="logo" style="width:76px;height:76px"></div>
+    <div class="brand" style="font-size:22px;margin-top:8px">Почти готово</div>
+    <div class="tagline">Как вас будут видеть другие пользователи?</div>
+    <div class="field">
+      <label>Имя</label>
+      <input class="input" id="firstName" type="text" placeholder="Ваше имя" maxlength="24">
+    </div>
+    <div class="field">
+      <label>Фамилия <span style="color:var(--muted)">(необязательно)</span></label>
+      <input class="input" id="lastName" type="text" placeholder="Можно не указывать" maxlength="24">
+    </div>
+    <button class="btn" id="nameNext">Войти в Планету</button>
+  </div>
+</section>
+
+<!-- ================= MAIN / CONTACTS ================= -->
+<section id="screen-main" class="screen">
+  <div class="hdr">
+    <div class="title">Планета</div>
+    <button class="iconbtn" id="addBtn" title="Добавить">＋</button>
+  </div>
+  <div class="profilebar">
+    <div class="avatar" id="myAvatar" style="width:44px;height:44px;font-size:16px"></div>
+    <div class="who">
+      <div class="n" id="myName">—</div>
+      <div class="p" id="myPhone">—</div>
+    </div>
+    <button class="logout" id="logoutBtn">Выйти</button>
+  </div>
+  <div class="searchwrap">
+    <span class="mag">🔍</span>
+    <input id="search" type="search" placeholder="Поиск пользователей по имени">
+  </div>
+  <div class="list" id="contacts"></div>
+</section>
+
+<!-- ================= CHAT ================= -->
+<section id="screen-chat" class="screen">
+  <div class="chat-hdr">
+    <button class="iconbtn" id="chatBack">‹</button>
+    <div class="avatar" id="chatAvatar" style="width:40px;height:40px;font-size:15px"></div>
+    <div class="meta">
+      <div class="name" id="chatName">—</div>
+      <div class="sub" id="chatStatus">в сети</div>
+    </div>
+    <button class="iconbtn" id="btnCall" title="Аудиозвонок">📞</button>
+    <button class="iconbtn" id="btnVideo" title="Видеозвонок">🎥</button>
+    <button class="iconbtn" id="btnScreen" title="Демонстрация экрана">🖥️</button>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div class="composer">
+    <button class="circle attach" id="btnAttach" title="Отправить файл">📎</button>
+    <input id="msgInput" type="text" placeholder="Сообщение…">
+    <button class="circle attach" id="btnCam" title="Камера">📷</button>
+    <button class="circle send" id="btnSend" title="Отправить">➤</button>
+  </div>
+</section>
+
+<!-- ================= CAMERA ================= -->
+<section id="screen-camera" class="screen">
+  <video id="cam" autoplay playsinline muted></video>
+  <div class="cam-top">
+    <button class="iconbtn" id="camBack" style="background:rgba(255,255,255,.12);border:none">‹</button>
+    <div class="name">Камера</div>
+  </div>
+  <div class="camerr" id="camErr" style="display:none"></div>
+  <div class="cam-bar">
+    <button class="cbtn" id="camSwitch" title="Сменить камеру">🔄</button>
+    <button class="cbtn red" id="camClose" title="Выключить">✕</button>
+  </div>
+</section>
+
+<!-- ================= CALL / SCREEN OVERLAY ================= -->
+<div class="overlay" id="overlay">
+  <div class="bigav" id="ovAvatar"></div>
+  <div class="cname" id="ovName">—</div>
+  <div class="cstatus" id="ovStatus">Соединение…</div>
+  <div class="note" id="ovNote"></div>
+  <div class="actions">
+    <button class="oval" id="ovMute">🔇</button>
+    <button class="hang" id="ovHang">✕</button>
+    <button class="oval" id="ovCam">🎥</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".txt,.apk,.exe" style="display:none">
+
+<script>
+/* ==================== Планета — демо-мессенджер ==================== */
+(function () {
+  "use strict";
+
+  var LS = "planeta_state_v1";
+  var $ = function (id) { return document.getElementById(id); };
+  var current = "screen-auth";
+  var overlayOpen = false;
+  var activeId = null;
+  var camStream = null;
+  var camFacing = "user";
+  var typingTimer = null;
+
+  // Show any uncaught runtime error right on screen (helps debugging on device)
+  window.addEventListener("error", function (e) {
+    try {
+      var d = document.createElement("div");
+      d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#ff5d6c;color:#fff;" +
+        "padding:10px 14px;font-family:monospace;font-size:12px;white-space:pre-wrap;";
+      d.textContent = "Ошибка: " + (e.message || e) + (e.lineno ? " (стр. " + e.lineno + ")" : "");
+      document.body.appendChild(d);
+    } catch (x) {}
+  });
+
+  function flash(el) {
+    if (!el) return;
+    el.style.borderColor = "#ff5d6c";
+    setTimeout(function () { el.style.borderColor = ""; }, 900);
+  }
+
+  var PALETTE = ["#6d5cff","#22d3ee","#f472b6","#34d399","#f59e0b","#fb7185","#38bdf8","#a78bfa","#f97316","#2dd4bf"];
+
+  // Directory starts empty — users appear only when you add them via search
+  var directory = [];
+
+  var state = load();
+
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem(LS));
+      if (s && s.chats) { if (s.added) mergeAdded(s.added); return s; }
+    } catch (e) {}
+    return { user: null, chats: {}, added: [] };
+  }
+  function mergeAdded(added) {
+    added.forEach(function (a) {
+      if (!directory.some(function (d) { return d.id === a.id; })) directory.push(a);
+    });
+  }
+  function save() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
+
+  function esc(t) {
+    return (t == null ? "" : String(t)).replace(/[&<>"]/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c];
+    });
+  }
+  function colorFor(seed) {
+    var h = 0;
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffff;
+    return PALETTE[Math.abs(h) % PALETTE.length];
+  }
+  function initials(f, l) {
+    var a = (f || "").trim(), b = (l || "").trim();
+    return ((a ? a[0] : "") + (b ? b[0] : "")).toUpperCase() || "?";
+  }
+  function human(b) {
+    if (b < 1024) return b + " Б";
+    if (b < 1048576) return (b / 1024).toFixed(1) + " КБ";
+    return (b / 1048576).toFixed(1) + " МБ";
+  }
+  function hhmm(ts) { var d = new Date(ts); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+  function byId(id) { for (var i = 0; i < directory.length; i++) if (directory[i].id === id) return directory[i]; return null; }
+  function fullName(u) { return (u.first + " " + (u.last || "")).trim(); }
+
+  /* ---------------- navigation ---------------- */
+  function show(id) {
+    var list = document.querySelectorAll(".screen");
+    for (var i = 0; i < list.length; i++) list[i].classList.toggle("active", list[i].id === id);
+    current = id;
+  }
+  window.appGoBack = function () {
+    if (overlayOpen) { closeOverlay(); return true; }
+    if (current === "screen-camera") { stopCamera(); show("screen-chat"); return true; }
+    if (current === "screen-chat") { activeId = null; show("screen-main"); return true; }
+    if (current === "screen-name") { show("screen-auth"); return true; }
+    return false;
+  };
+
+  /* ---------------- AUTH ---------------- */
+  var phone = $("phone"), authNext = $("authNext");
+  function digits(s) { return (String(s).match(/\d/g) || []).length; }
+  authNext.addEventListener("click", function () {
+    if (digits(phone.value) < 5) { flash(phone); phone.focus(); return; }
+    state._pendingPhone = phone.value.trim();
+    show("screen-name");
+    setTimeout(function () { $("firstName").focus(); }, 100);
+  });
+
+  /* ---------------- NAME ---------------- */
+  var firstName = $("firstName"), lastName = $("lastName"), nameNext = $("nameNext");
+  nameNext.addEventListener("click", function () {
+    var f = firstName.value.trim();
+    if (!f) { flash(firstName); firstName.focus(); return; }
+    state.user = { phone: state._pendingPhone || phone.value.trim(), first: f, last: lastName.value.trim() };
+    save();
+    enterApp();
+  });
+
+  /* ---------------- MAIN ---------------- */
+  function enterApp() {
+    var u = state.user;
+    $("myName").textContent = fullName(u);
+    $("myPhone").textContent = u.phone;
+    var av = $("myAvatar");
+    av.textContent = initials(u.first, u.last);
+    av.style.background = colorFor(u.first + u.last);
+    renderContacts("");
+    show("screen-main");
+  }
+
+  var search = $("search");
+  search.addEventListener("input", function () { renderContacts(search.value); });
+  $("addBtn").addEventListener("click", function () { search.focus(); });
+  $("logoutBtn").addEventListener("click", function () {
+    state.user = null; save();
+    phone.value = ""; firstName.value = ""; lastName.value = "";
+    show("screen-auth");
+  });
+
+  function renderContacts(q) {
+    q = (q || "").trim().toLowerCase();
+    var box = $("contacts");
+    var items = directory.filter(function (u) {
+      if (!q) return true;
+      return fullName(u).toLowerCase().indexOf(q) !== -1 || u.first.toLowerCase().indexOf(q) !== -1;
+    });
+    var html = "";
+    if (items.length) {
+      html += '<div class="sect">' + (q ? "Результаты поиска" : "Пользователи") + '</div>';
+      items.forEach(function (u) { html += rowHtml(u); });
+    } else if (!q) {
+      html += '<div class="empty">🪐<br><br>Здесь пока никого нет.<br>' +
+        'Введите имя пользователя в поиске выше,<br>чтобы найти его и начать чат.</div>';
+    } else {
+      var qn = esc(search.value.trim());
+      html += '<div class="empty">По запросу «' + qn + '» никого нет.<br><br>' +
+        '<button class="btn" style="max-width:280px;margin:0 auto" data-new="1">Начать чат с «' + qn + '»</button></div>';
+    }
+    box.innerHTML = html;
+  }
+  function rowHtml(u) {
+    var last = lastMessagePreview(u.id);
+    return '<div class="row" data-open="' + u.id + '">' +
+      '<div class="avatar" style="background:' + colorFor(u.first + u.last) + '">' + esc(initials(u.first, u.last)) + '</div>' +
+      '<div class="meta"><div class="name">' + esc(fullName(u)) + '</div>' +
+      '<div class="sub">' + esc(last || u.bio) + '</div></div>' +
+      '<div class="dot ' + (u.online ? "" : "off") + '"></div></div>';
+  }
+  function lastMessagePreview(id) {
+    var arr = state.chats[id];
+    if (!arr || !arr.length) return "";
+    var m = arr[arr.length - 1];
+    var body = m.type === "file" ? "📎 " + m.name : m.text;
+    return (m.out ? "Вы: " : "") + body;
+  }
+
+  $("contacts").addEventListener("click", function (e) {
+    var newBtn = e.target.closest ? e.target.closest("[data-new]") : null;
+    if (newBtn) {
+      var name = search.value.trim();
+      if (!name) return;
+      var parts = name.split(/\s+/);
+      var u = { id: "n" + Date.now(), first: parts[0], last: parts.slice(1).join(" "), online: true, bio: "В сети" };
+      directory.push(u);
+      state.added = state.added || [];
+      state.added.push(u);
+      save();
+      search.value = "";
+      openChat(u.id);
+      return;
+    }
+    var row = e.target.closest ? e.target.closest("[data-open]") : null;
+    if (row) openChat(row.getAttribute("data-open"));
+  });
+
+  /* ---------------- CHAT ---------------- */
+  function openChat(id) {
+    activeId = id;
+    var u = byId(id);
+    if (!u) return;
+    $("chatName").textContent = fullName(u);
+    $("chatStatus").textContent = u.online ? "в сети" : "был(а) недавно";
+    var av = $("chatAvatar");
+    av.textContent = initials(u.first, u.last);
+    av.style.background = colorFor(u.first + u.last);
+    if (!state.chats[id]) state.chats[id] = [];
+    renderMsgs();
+    show("screen-chat");
+    setTimeout(function () { $("msgInput").focus(); }, 120);
+  }
+  $("chatBack").addEventListener("click", function () {
+    activeId = null;
+    show("screen-main");
+    renderContacts(search.value);
+  });
+
+  function renderMsgs() {
+    var arr = state.chats[activeId] || [];
+    var box = $("msgs"), html = "";
+    if (!arr.length) html += '<div class="day">Сегодня</div>';
+    arr.forEach(function (m) {
+      if (m.type === "file") {
+        var tag = (m.ext || "FILE").toUpperCase().slice(0, 3);
+        html += '<div class="bubble ' + (m.out ? "out" : "in") + '"><div class="filemsg">' +
+          '<div class="fileic">' + esc(tag) + '</div>' +
+          '<div class="fi"><div class="fn">' + esc(m.name) + '</div><div class="fs">' + human(m.size) + ' · файл</div></div>' +
+          '</div><span class="t">' + hhmm(m.time) + '</span></div>';
+      } else {
+        html += '<div class="bubble ' + (m.out ? "out" : "in") + '">' + esc(m.text) +
+          '<span class="t">' + hhmm(m.time) + '</span></div>';
+      }
+    });
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function pushMsg(m) {
+    if (!state.chats[activeId]) state.chats[activeId] = [];
+    state.chats[activeId].push(m);
+    save();
+    renderMsgs();
+  }
+
+  function sendText() {
+    var inp = $("msgInput"), t = inp.value.trim();
+    if (!t) return;
+    pushMsg({ out: true, type: "text", text: t, time: Date.now() });
+    inp.value = "";
+    autoReply();
+  }
+  $("btnSend").addEventListener("click", sendText);
+  $("msgInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.keyCode === 13) { e.preventDefault(); sendText(); }
+  });
+
+  var REPLIES = [
+    "Это демонстрационная версия Планеты — я отвечаю автоматически 🙂",
+    "Принято!",
+    "Отличный вопрос 👍",
+    "Файл получил, спасибо!",
+    "Давай позвонимся позже.",
+    "🚀"
+  ];
+  var firstReplyDone = {};
+  function autoReply() {
+    var id = activeId;
+    if (!id) return;
+    $("chatStatus").textContent = "печатает…";
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function () {
+      var txt = firstReplyDone[id] ? REPLIES[Math.floor(Math.random() * REPLIES.length)] : REPLIES[0];
+      firstReplyDone[id] = true;
+      if (!state.chats[id]) state.chats[id] = [];
+      state.chats[id].push({ out: false, type: "text", text: txt, time: Date.now() });
+      save();
+      var u = byId(id);
+      if (activeId === id) {
+        $("chatStatus").textContent = (u && u.online) ? "в сети" : "был(а) недавно";
+        renderMsgs();
+      }
+    }, 1100);
+  }
+
+  /* ---------------- FILE ATTACH ---------------- */
+  var fileInput = $("fileInput");
+  $("btnAttach").addEventListener("click", function () { fileInput.click(); });
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    var ext = (f.name.split(".").pop() || "").toLowerCase();
+    pushMsg({ out: true, type: "file", name: f.name, size: f.size || 0, ext: ext, time: Date.now() });
+    fileInput.value = "";
+    autoReply();
+  });
+
+  /* ---------------- CAMERA ---------------- */
+  $("btnCam").addEventListener("click", startCamera);
+  $("camClose").addEventListener("click", function () { stopCamera(); show("screen-chat"); });
+  $("camBack").addEventListener("click", function () { stopCamera(); show("screen-chat"); });
+  $("camSwitch").addEventListener("click", function () { camFacing = camFacing === "user" ? "environment" : "user"; startCamera(); });
+
+  function startCamera() {
+    show("screen-camera");
+    var v = $("cam"), err = $("camErr");
+    err.style.display = "none";
+    v.classList.toggle("back", camFacing !== "user");
+    stopCamera();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      err.style.display = "flex";
+      err.innerHTML = "Камера недоступна на этом устройстве или версии Android.";
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false })
+      .then(function (s) { camStream = s; v.srcObject = s; })
+      .catch(function (e) {
+        err.style.display = "flex";
+        err.innerHTML = "Не удалось включить камеру.<br><br>" + esc(e && e.message ? e.message : e) +
+          "<br><br>Разрешите приложению доступ к камере в настройках Android.";
+      });
+  }
+  function stopCamera() {
+    var v = $("cam");
+    if (camStream) { camStream.getTracks().forEach(function (t) { t.stop(); }); camStream = null; }
+    if (v) { try { v.srcObject = null; } catch (x) {} }
+  }
+
+  /* ---------------- CALL / SCREEN SHARE OVERLAY ---------------- */
+  $("btnCall").addEventListener("click", function () { openOverlay("Аудиозвонок"); });
+  $("btnVideo").addEventListener("click", function () { openOverlay("Видеозвонок"); });
+  $("btnScreen").addEventListener("click", function () { openOverlay("Демонстрация экрана"); });
+  $("ovHang").addEventListener("click", closeOverlay);
+
+  function openOverlay(label) {
+    var u = byId(activeId);
+    if (!u) return;
+    overlayOpen = true;
+    var av = $("ovAvatar");
+    av.textContent = initials(u.first, u.last);
+    av.style.background = colorFor(u.first + u.last);
+    $("ovName").textContent = fullName(u);
+    $("ovStatus").textContent = label + " · соединение…";
+    $("ovNote").innerHTML = "⚠️ Это офлайн-демонстрация. " + esc(label) +
+      " и передача между устройствами работают только с сервером Планеты, которого в этом APK нет.";
+    $("overlay").classList.add("active");
+    setTimeout(function () { if (overlayOpen) $("ovStatus").textContent = label + " · ожидание сервера…"; }, 2200);
+  }
+  function closeOverlay() { overlayOpen = false; $("overlay").classList.remove("active"); }
+
+  /* ---------------- boot ---------------- */
+  try {
+    if (state.user) enterApp(); else show("screen-auth");
+  } catch (e) {
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#ff5d6c;color:#fff;padding:10px 14px;font-family:monospace;font-size:12px;";
+    d.textContent = "Ошибка запуска: " + (e && e.message ? e.message : e);
+    document.body.appendChild(d);
+  }
+})();
+
+</script>
+</body>
+</html>
